@@ -1,5 +1,41 @@
 #include "qboot_hal.h"
 
+#ifndef BARE_METAL
+/* --- Desktop Simulator-Modus --- */
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/select.h>
+
+static int uart_init(void *priv) {
+    (void)priv;
+    /* In der Simulation ist stdout/stdin bereits initialisiert */
+    return 0;
+}
+
+static void uart_putc(void *priv, char c) {
+    (void)priv;
+    putchar(c);
+    fflush(stdout);
+}
+
+static char uart_getc(void *priv) {
+    (void)priv;
+    return getchar();
+}
+
+static int uart_tstc(void *priv) {
+    (void)priv;
+    /* Nutzt select(), um im Terminal nicht-blockierend zu prüfen, ob eine Taste gedrückt wurde */
+    struct timeval tv = {0, 0};
+    fd_set fds;
+    FD_ZERO(&fds);
+    FD_SET(STDIN_FILENO, &fds);
+    return select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv) > 0 ? 1 : 0;
+}
+
+#else
+/* --- Physischer Bare-Metal-Modus --- */
+
 /* Registerspezifische Offsets für einen Standard 16550 UART */
 #define UART_THR_REG   0  /* Transmitter Holding Register (Write) */
 #define UART_RHR_REG   0  /* Receiver Buffer Register (Read) */
@@ -13,12 +49,7 @@ static int uart_init(void *priv) {
     if (!base) {
         return -1;
     }
-
-    /* Hier würde die Initialisierung stattfinden:
-     * - Baudrate einstellen (Baud-Generator Register)
-     * - Parameter setzen (8 Datenbits, keine Parität, 1 Stoppbit - 8N1)
-     * - FIFOs aktivieren
-     */
+    /* Hardware-Initialisierung (Baudrate etc.) */
     return 0;
 }
 
@@ -27,13 +58,9 @@ static void uart_putc(void *priv, char c) {
     if (!base) {
         return;
     }
-
-    /* Warten, bis das Sende-Register leer ist (THRE bit) */
     while ((base[UART_LSR_REG] & UART_LSR_THRE) == 0) {
         /* Busy Wait */
     }
-
-    /* Zeichen in Sende-Register schreiben */
     base[UART_THR_REG] = c;
 }
 
@@ -42,13 +69,9 @@ static char uart_getc(void *priv) {
     if (!base) {
         return 0;
     }
-
-    /* Warten, bis ein Zeichen empfangen wurde (DR bit) */
     while ((base[UART_LSR_REG] & UART_LSR_DR) == 0) {
         /* Busy Wait */
     }
-
-    /* Zeichen aus Empfangsregister lesen */
     return base[UART_RHR_REG];
 }
 
@@ -57,10 +80,9 @@ static int uart_tstc(void *priv) {
     if (!base) {
         return 0;
     }
-
-    /* Prüfen, ob Daten im Puffer liegen */
     return (base[UART_LSR_REG] & UART_LSR_DR) ? 1 : 0;
 }
+#endif
 
 /* Globale Instanz der Operationen für diesen Treiber */
 struct console_ops uart_console_ops = {
