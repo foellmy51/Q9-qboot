@@ -1,6 +1,11 @@
 #include "qboot_lib.h"
 #include "q9_bios.h"
 
+/* Host/build stubs for tick and scheduler used by q9_bogomips when building native qboot */
+unsigned long read_ticks(void) { return 0UL; }
+void scheduler_lock(void) { }
+void scheduler_unlock(void) { }
+
 void bios_puts(const char *str) {
     if (!str) {
         return;

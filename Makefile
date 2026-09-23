@@ -3,6 +3,7 @@ CFLAGS ?= -Wall -Wextra -Isrc/include -O2 -g
 
 # C-Quelldateien für Simulator und Baremetal
 SRCS = src/boot/main.c \
+       src/bios/q9_bogomips.c \
        src/cli/cli.c \
        src/bios/bios_core.c \
        src/bios/console_uart.c \
