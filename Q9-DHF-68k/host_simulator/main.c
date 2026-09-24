@@ -102,6 +102,11 @@ int main(int argc, char **argv) {
                         ssize_t w = dhf_host_write(hfd, (uint8_t*)mem + buf_off, len);
                         if (w < 0) sh->result_code = (uint32_t)errno; else { sh->result_code = 0; sh->result_len = (uint32_t)w; }
                     }
+                } else if (cmd == 0x0006) { // Close
+                    {
+                        int hfd = (int)sh->param[2];
+                        if (dhf_host_close(hfd) != 0) sh->result_code = (uint32_t)errno; else sh->result_code = 0;
+                    }
                 } else if (cmd == 0x000C) { // MkDir
                     char real[PATH_MAX];
                     if (confined_path(dhf_descriptor_get_basepath(), path, real, sizeof(real)) != 0) {
