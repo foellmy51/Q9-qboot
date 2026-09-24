@@ -3,15 +3,15 @@
 | Component | Function / Item | Status | Notes |
 |---|---|---:|---|
 | Manager | init | 🟡 Partially | init forwards to driver init; further validation needed |
-| Manager | open/close/read/write | ❌ Not started | Forwarding stubs present but driver not implemented |
-| Manager | getstat/setstat | ❌ Not started | |
-| Manager | chdir/cd | ❌ Not started | Must enforce basepath confinement |
+| Manager | open/close/read/write | 🟡 Partially | Forwarding stubs present; host-simulator and driver stubs exercise basic flow (open/create/read/write/close implemented in host-sim) |
+| Manager | getstat/setstat | ❌ Not started | To be implemented; host-sim supports mapping to stat()/fstat() |
+| Manager | chdir/cd | ❌ Not started | Must enforce basepath confinement; host-sim will handle but manager changes must be validated |
 | Manager | mkdir/rmdir/unlink | ❌ Not started | |
 | Manager | rename | ❌ Not started | |
 | Manager | opendir/readdir | ❌ Not started | |
-| Driver (dhfdrv-68k) | init | 🟡 Partially | stub returns success; implement host FS mounting |
-| Driver (dhfdrv-68k) | open/read/write/close | ❌ Not started | Platform-specific implementations required |
-| Descriptor | basepath getter/setter | 🟡 Partially | setter clamps string; further validation needed |
+| Driver (dhfdrv-68k) | init | 🟡 Partially | Driver stub exists; host-sim provides host FS mounting and confinement helpers |
+| Driver (dhfdrv-68k) | open/read/write/close | 🟡 Partially | Host-simulator implements host-side FS operations; driver skeleton present but integration with emulator manager still needed |
+| Descriptor | basepath getter/setter | ✅ Done | Getter/setter implemented in descriptor/dhf_descriptor.c; host simulator uses basepath for confinement |
 
 > Legend: ❌ Not started, 🟡 Partially/rudimentary, ✅ Done
 
