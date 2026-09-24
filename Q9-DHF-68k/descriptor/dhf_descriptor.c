@@ -15,3 +15,25 @@ int dhf_descriptor_set_basepath(const char *p) {
     return 0;
 }
 
+// Socket field accessors
+int dhf_descriptor_get_socket_fd(const dhf_descriptor_t *desc) {
+    return desc ? desc->socket_fd : -1;
+}
+void dhf_descriptor_set_socket_fd(dhf_descriptor_t *desc, int fd) {
+    if (desc) desc->socket_fd = fd;
+}
+int dhf_descriptor_get_socket_flags(const dhf_descriptor_t *desc) {
+    return desc ? desc->socket_flags : 0;
+}
+void dhf_descriptor_set_socket_flags(dhf_descriptor_t *desc, int flags) {
+    if (desc) desc->socket_flags = flags;
+}
+
+// Flags accessors
+unsigned int dhf_descriptor_get_flags(const dhf_descriptor_t *desc) {
+    return desc ? desc->flags : 0;
+}
+void dhf_descriptor_set_flags(dhf_descriptor_t *desc, unsigned int flags) {
+    if (desc) desc->flags = flags;
+}
+
