@@ -16,9 +16,15 @@ int dhfdrv_init(const char *basepath) { (void)basepath; /* TODO: init host FS ma
  */
 
 #include <stdint.h>
+#include "../manager/path_desc.h"
 
 void *dhfdrv_resolve_pd_from_emulated_addr(uint32_t emu_addr) {
-    return dhf_manager_resolve_emulated_addr(emu_addr);
+    void *p = dhf_manager_resolve_emulated_addr(emu_addr);
+    /* Basic validation: ensure pointer points to expected dhf_path_desc_t layout by checking non-zero host_fd */
+    if (!p) return NULL;
+    dhf_path_desc_t *pd = (dhf_path_desc_t *)p;
+    if (pd->host_fd == 0) return NULL;
+    return p;
 }
 
 #include "../host_simulator/fs_ops.h"

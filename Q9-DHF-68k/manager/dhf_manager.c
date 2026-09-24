@@ -15,16 +15,91 @@ int dhf_manager_init(void) {
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "path_desc.h"
+#include <stdio.h>
+
+/* For host-testing we keep a small table of active path descriptors indexed by
+ * manager fd (which for simplicity we mirror to host fd + 1000 offset). This is
+ * a test harness only; manager in OS-9 would use kernel path descriptors.
+ */
+#define MANAGER_FD_OFFSET 1000
+#define MAX_PATH_DESC 64
+static dhf_path_desc_t *g_path_table[MAX_PATH_DESC];
+
+static int alloc_manager_fd(dhf_path_desc_t *pd) {
+    for (int i = 0; i < MAX_PATH_DESC; ++i) {
+        if (!g_path_table[i]) {
+            g_path_table[i] = pd;
+            return MANAGER_FD_OFFSET + i;
+        }
+    }
+    return -1;
+}
+
+static dhf_path_desc_t *lookup_pd(int manager_fd) {
+    int idx = manager_fd - MANAGER_FD_OFFSET;
+    if (idx < 0 || idx >= MAX_PATH_DESC) return NULL;
+    return g_path_table[idx];
+}
+
+static void free_manager_fd(int manager_fd) {
+    int idx = manager_fd - MANAGER_FD_OFFSET;
+    if (idx < 0 || idx >= MAX_PATH_DESC) return;
+    if (g_path_table[idx]) {
+        dhf_manager_free(g_path_table[idx]);
+        g_path_table[idx] = NULL;
+    }
+}
+
 int dhf_manager_open(const char *path, int flags) {
-    // allocate per-path control block if needed in future
-    (void)dhf_manager_alloc; // keep reference
-    return dhfdrv_open(path, flags);
+    dhf_path_desc_t *pd = dhf_manager_alloc(sizeof(*pd));
+    if (!pd) return -1;
+    pd->flags = flags;
+    pd->host_fd = dhfdrv_open(path, flags);
+    if (pd->host_fd < 0) {
+        dhf_manager_free(pd);
+        return -1;
+    }
+    int mfd = alloc_manager_fd(pd);
+    if (mfd < 0) {
+        dhfdrv_close(pd->host_fd);
+        dhf_manager_free(pd);
+        return -1;
+    }
+    /* Simulate writing the emulated address (as 32-bit value) into the OS-9 path descriptor
+     * so the driver can read it. In a real OS-9 manager this would write to pd->pd_opt.
+     */
+    uint32_t emu_addr = dhf_manager_alloc_emulated_addr(sizeof(dhf_path_desc_t));
+    /* Copy our local pd contents into the allocated emulated block so driver can read it */
+    void *resolved = dhf_manager_resolve_emulated_addr(emu_addr);
+    if (resolved) memcpy(resolved, pd, sizeof(dhf_path_desc_t));
+
+    /* For host tests also store the emu_addr in pd->private for reference */
+    pd->private = (void*)(uintptr_t)emu_addr;
+
+    return mfd;
 }
+
 int dhf_manager_close(int fd) {
-    return dhfdrv_close(fd);
+    dhf_path_desc_t *pd = lookup_pd(fd);
+    if (!pd) return -1;
+    int res = dhfdrv_close(pd->host_fd);
+    free_manager_fd(fd);
+    return res;
 }
-ssize_t dhf_manager_read(int fd, void *buf, size_t count) { return dhfdrv_read(fd, buf, count); }
-ssize_t dhf_manager_write(int fd, const void *buf, size_t count) { return dhfdrv_write(fd, buf, count); }
+
+ssize_t dhf_manager_read(int fd, void *buf, size_t count) {
+    dhf_path_desc_t *pd = lookup_pd(fd);
+    if (!pd) return -1;
+    return dhfdrv_read(pd->host_fd, buf, count);
+}
+
+ssize_t dhf_manager_write(int fd, const void *buf, size_t count) {
+    dhf_path_desc_t *pd = lookup_pd(fd);
+    if (!pd) return -1;
+    return dhfdrv_write(pd->host_fd, buf, count);
+}
+
 int dhf_manager_getstat(const char *path, void *statbuf) { return dhfdrv_getstat(path, statbuf); }
 int dhf_manager_setstat(const char *path, void *statbuf) { return dhfdrv_setstat(path, statbuf); }
 int dhf_manager_chdir(const char *path) { return dhfdrv_chdir(path); }
