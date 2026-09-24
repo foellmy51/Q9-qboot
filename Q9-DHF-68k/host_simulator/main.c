@@ -80,6 +80,28 @@ int main(int argc, char **argv) {
                 } else if (cmd == 0x0002) { // Open
                     int fd = dhf_host_open(dhf_descriptor_get_basepath(), path, O_RDONLY, 0);
                     if (fd < 0) sh->result_code = (uint32_t)errno; else { sh->result_code = 0; sh->result_len = (uint32_t)fd; }
+                } else if (cmd == 0x0003) { // Seek (not implemented)
+                    sh->result_code = (uint32_t)ENOSYS;
+                } else if (cmd == 0x0004) { // Read
+                    // param[2] = host fd, param[1]=buffer offset in emulator mem, param[3]=length
+                    int hfd = (int)sh->param[2];
+                    uint32_t buf_off = sh->param[1];
+                    uint32_t len = sh->param[3];
+                    if (buf_off + len > map_sz) { sh->result_code = (uint32_t)EFAULT; }
+                    else {
+                        ssize_t r = dhf_host_read(hfd, (uint8_t*)mem + buf_off, len);
+                        if (r < 0) sh->result_code = (uint32_t)errno; else { sh->result_code = 0; sh->result_len = (uint32_t)r; }
+                    }
+                } else if (cmd == 0x0005) { // Write
+                    // param[2] = host fd, param[1]=buffer offset in emulator mem, param[3]=length
+                    int hfd = (int)sh->param[2];
+                    uint32_t buf_off = sh->param[1];
+                    uint32_t len = sh->param[3];
+                    if (buf_off + len > map_sz) { sh->result_code = (uint32_t)EFAULT; }
+                    else {
+                        ssize_t w = dhf_host_write(hfd, (uint8_t*)mem + buf_off, len);
+                        if (w < 0) sh->result_code = (uint32_t)errno; else { sh->result_code = 0; sh->result_len = (uint32_t)w; }
+                    }
                 } else if (cmd == 0x000C) { // MkDir
                     char real[PATH_MAX];
                     if (confined_path(dhf_descriptor_get_basepath(), path, real, sizeof(real)) != 0) {
