@@ -51,6 +51,11 @@ int main(int argc, char **argv) {
     }
     dhf_shared_t *sh = (dhf_shared_t *)mem;
 
+    // dir table for simple DIR* tracking (supports up to 16 concurrent handles)
+    typedef struct { int used; DIR *dptr; } dir_entry_t;
+    dir_entry_t dir_table[16];
+    memset(dir_table, 0, sizeof(dir_table));
+
     printf("DHF host-simulator (file-backed) started. Monitoring commands...\n");
     uint32_t last_seq = sh->seq;
     uint16_t last_cmd = sh->command;
@@ -155,9 +160,20 @@ int main(int argc, char **argv) {
                     if (confined_path(dhf_descriptor_get_basepath(), path, real, sizeof(real)) != 0) {
                         sh->result_code = (uint32_t)EACCES;
                     } else {
-                        // For simplicity return 1 as dir handle (TODO: implement DIR* tracking)
-                        sh->result_code = 0;
-                        sh->result_len = 1;
+                        // allocate a DIR* slot
+                        int slot = -1;
+                        for (int i = 0; i < 16; ++i) if (!dir_table[i].used) { slot = i; break; }
+                        if (slot < 0) { sh->result_code = (uint32_t)EMFILE; }
+                        else {
+                            DIR *d = opendir(real);
+                            if (!d) { sh->result_code = (uint32_t)errno; }
+                            else {
+                                dir_table[slot].used = 1;
+                                dir_table[slot].dptr = d;
+                                sh->result_code = 0;
+                                sh->result_len = (uint32_t)(slot+1); // handle = slot+1
+                            }
+                        }
                     }
                 } else if (cmd == 0x000A) { // Readdir
                     // Simple readdir implementation for a single opendir handle 1: param[2]=dir handle, param[1]=out buffer offset
@@ -165,19 +181,22 @@ int main(int argc, char **argv) {
                     uint32_t out_off = sh->param[1];
                     if (dir_handle != 1) { sh->result_code = (uint32_t)EBADF; }
                     else {
-                        // For demo, we will read the directory listed in param[0]
+                        // Read next entry from an opened directory tracked by dir table
                         uint32_t p0 = sh->param[0];
                         char *path = (char *)((uint8_t*)mem + p0);
                         char real[PATH_MAX];
                         if (confined_path(dhf_descriptor_get_basepath(), path, real, sizeof(real)) != 0) {
                             sh->result_code = (uint32_t)EACCES;
                         } else {
-                            DIR *d = opendir(real);
-                            if (!d) { sh->result_code = (uint32_t)errno; }
+                            // Lookup DIR* by handle (param[2])
+                            int dir_handle = (int)sh->param[2];
+                            if (dir_handle <= 0 || dir_handle > 16 || !dir_table[dir_handle-1].used) { sh->result_code = (uint32_t)EBADF; }
                             else {
+                                DIR *d = dir_table[dir_handle-1].dptr;
                                 struct dirent *de = readdir(d);
-                                if (!de) { sh->result_code = (uint32_t)errno; closedir(d); }
-                                else {
+                                if (!de) {
+                                    if (errno != 0) sh->result_code = (uint32_t)errno; else sh->result_code = (uint32_t)ENOENT;
+                                } else {
                                     size_t namelen = strlen(de->d_name) + 1;
                                     if (out_off + namelen > map_sz) { sh->result_code = (uint32_t)EFAULT; }
                                     else {
@@ -185,7 +204,6 @@ int main(int argc, char **argv) {
                                         sh->result_code = 0;
                                         sh->result_len = (uint32_t)namelen;
                                     }
-                                    closedir(d);
                                 }
                             }
                         }
