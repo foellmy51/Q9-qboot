@@ -25,4 +25,7 @@ int dhfdrv_readdir(int dirfd, void *entry);
 uint32_t dhf_manager_alloc_emulated_addr(size_t size);
 void *dhf_manager_resolve_emulated_addr(uint32_t addr);
 
+/* Driver helper to resolve a manager-emulated pd pointer */
+void *dhfdrv_resolve_pd_from_emulated_addr(uint32_t emu_addr);
+
 #endif

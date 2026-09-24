@@ -7,6 +7,20 @@
 #include <stdio.h>
 
 int dhfdrv_init(const char *basepath) { (void)basepath; /* TODO: init host FS mapping */ return 0; }
+
+/* Attach a manager-allocated per-path control block emulated-address to driver
+ * state. In the real system manager will store a pointer in the path descriptor
+ * (pd->pd_opt) which the driver can read. For our tests the manager will call
+ * dhf_manager_alloc_emulated_addr() and pass the 32-bit value into the driver
+ * via higher-level wiring; the driver can resolve it below.
+ */
+
+#include <stdint.h>
+
+void *dhfdrv_resolve_pd_from_emulated_addr(uint32_t emu_addr) {
+    return dhf_manager_resolve_emulated_addr(emu_addr);
+}
+
 int dhfdrv_open(const char *path, int flags) { (void)path; (void)flags; return -1; }
 int dhfdrv_close(int fd) { (void)fd; return -1; }
 ssize_t dhfdrv_read(int fd, void *buf, size_t count) { (void)fd; (void)buf; (void)count; return -1; }
