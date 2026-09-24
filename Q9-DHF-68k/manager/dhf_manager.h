@@ -23,3 +23,8 @@ int dhf_manager_readdir(int dirfd, void *entry);
 /* Manager allocation helpers - on real OS-9 these should allocate from system pool */
 void *dhf_manager_alloc(size_t size);
 void dhf_manager_free(void *p);
+
+/* Helpers for tests that mimic emulator-address handoff */
+uint32_t dhf_manager_alloc_emulated_addr(size_t size);
+void *dhf_manager_resolve_emulated_addr(uint32_t addr);
+
