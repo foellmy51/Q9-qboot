@@ -10,7 +10,7 @@
 | Manager | rename | ❌ Not started | |
 | Manager | opendir/readdir | ✅ Done (basic) | Opendir, Readdir and handle tracking implemented for up to 16 DIR handles; supports single-entry reads per call |
 | Driver (dhfdrv-68k) | init | 🟡 Partially | Driver stub exists; host-sim provides host FS mounting and confinement helpers |
-| Driver (dhfdrv-68k) | open/read/write/close | 🟡 Partially | Implemented mapping to host FS ops (open/read/write/close); needs error mapping and PD usage validation |
+| Driver (dhfdrv-68k) | open/read/write/close/seek/opendir/readdir | 🟡 Partially | Implemented I/O, seek, truncate, and dir handling using host FS; needs error→Q9 mapping and PD-pointer validation |
 | Descriptor | basepath getter/setter | ✅ Done | Getter/setter implemented in descriptor/dhf_descriptor.c; host simulator uses basepath for confinement |
 
 > Legend: ❌ Not started, 🟡 Partially/rudimentary, ✅ Done
