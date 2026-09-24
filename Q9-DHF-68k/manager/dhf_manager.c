@@ -12,6 +12,9 @@ int dhf_manager_init(void) {
     return dhfdrv_init(dhf_descriptor_get_basepath());
 }
 
+#include <stdio.h>
+#include <stdlib.h>
+
 int dhf_manager_open(const char *path, int flags) { return dhfdrv_open(path, flags); }
 int dhf_manager_close(int fd) { return dhfdrv_close(fd); }
 ssize_t dhf_manager_read(int fd, void *buf, size_t count) { return dhfdrv_read(fd, buf, count); }
