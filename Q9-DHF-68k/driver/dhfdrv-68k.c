@@ -21,10 +21,27 @@ void *dhfdrv_resolve_pd_from_emulated_addr(uint32_t emu_addr) {
     return dhf_manager_resolve_emulated_addr(emu_addr);
 }
 
-int dhfdrv_open(const char *path, int flags) { (void)path; (void)flags; return -1; }
-int dhfdrv_close(int fd) { (void)fd; return -1; }
-ssize_t dhfdrv_read(int fd, void *buf, size_t count) { (void)fd; (void)buf; (void)count; return -1; }
-ssize_t dhfdrv_write(int fd, const void *buf, size_t count) { (void)fd; (void)buf; (void)count; return -1; }
+#include "../host_simulator/fs_ops.h"
+
+int dhfdrv_open(const char *path, int flags) {
+    const char *base = dhf_descriptor_get_basepath();
+    if (!base) return -1;
+    // map flags roughly: manager passes O_RDONLY/O_WRONLY/O_RDWR|O_CREAT etc.
+    int host_fd = dhf_host_open(base, path, flags, 0666);
+    return host_fd;
+}
+
+int dhfdrv_close(int fd) {
+    return dhf_host_close(fd);
+}
+
+ssize_t dhfdrv_read(int fd, void *buf, size_t count) {
+    return dhf_host_read(fd, buf, count);
+}
+
+ssize_t dhfdrv_write(int fd, const void *buf, size_t count) {
+    return dhf_host_write(fd, buf, count);
+}
 int dhfdrv_getstat(const char *path, void *statbuf) { (void)path; (void)statbuf; return -1; }
 int dhfdrv_setstat(const char *path, void *statbuf) { (void)path; (void)statbuf; return -1; }
 #include <limits.h>
