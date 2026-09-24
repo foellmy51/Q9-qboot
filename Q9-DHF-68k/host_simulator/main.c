@@ -9,6 +9,10 @@
 #include <signal.h>
 
 #include "../include/dhf_shared.h"
+#include "fs_ops.h"
+#include "../descriptor/dhf_descriptor.h"
+#include <errno.h>
+#include <limits.h>
 
 static volatile int keep_running = 1;
 static void sigint_handler(int sig) { (void)sig; keep_running = 0; }
@@ -60,11 +64,40 @@ int main(int argc, char **argv) {
             // Basic handlers
             if (cmd == 0x0021) { // Descriptor Init
                 printf("Handling Descriptor Init\n");
-                // For now, just acknowledge
                 sh->result_code = 0; // ok
             } else if (cmd == 0x0022) { // Ping
                 printf("Handling Ping\n");
                 sh->result_code = 0; // ok
+            } else if (cmd >= 0x0001 && cmd <= 0x000D) {
+                // Map simple manager FM calls: use param[0] as pointer to path (in file-backed memory we treat as offset)
+                // For file-backed test harness, param[0] contains offset into the mapped file where a NUL-terminated path is stored.
+                uint32_t p0 = sh->param[0];
+                char *path = (char *)((uint8_t*)mem + p0);
+                printf("FM command 0x%04x path@0x%08x -> '%s'\n", cmd, p0, path);
+                if (cmd == 0x0001) { // Create -> open with O_CREAT
+                    int fd = dhf_host_open(dhf_descriptor_get_basepath(), path, O_CREAT | O_RDWR, 0644);
+                    if (fd < 0) sh->result_code = (uint32_t)errno; else { sh->result_code = 0; sh->result_len = (uint32_t)fd; }
+                } else if (cmd == 0x0002) { // Open
+                    int fd = dhf_host_open(dhf_descriptor_get_basepath(), path, O_RDONLY, 0);
+                    if (fd < 0) sh->result_code = (uint32_t)errno; else { sh->result_code = 0; sh->result_len = (uint32_t)fd; }
+                } else if (cmd == 0x000C) { // MkDir
+                    char real[PATH_MAX];
+                    if (confined_path(dhf_descriptor_get_basepath(), path, real, sizeof(real)) != 0) {
+                        sh->result_code = (uint32_t)EACCES;
+                    } else if (mkdir(real, 0755) != 0) {
+                        sh->result_code = (uint32_t)errno;
+                    } else sh->result_code = 0;
+                } else if (cmd == 0x000B) { // Delete / unlink
+                    char real[PATH_MAX];
+                    if (confined_path(dhf_descriptor_get_basepath(), path, real, sizeof(real)) != 0) {
+                        sh->result_code = (uint32_t)EACCES;
+                    } else if (unlink(real) != 0) {
+                        sh->result_code = (uint32_t)errno;
+                    } else sh->result_code = 0;
+                } else {
+                    printf("FM cmd 0x%04x not implemented in host-sim yet\n", cmd);
+                    sh->result_code = (uint32_t)ENOSYS;
+                }
             } else {
                 printf("Unhandled command 0x%04x - echoing OK\n", cmd);
                 sh->result_code = 0; // ok
