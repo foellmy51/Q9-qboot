@@ -113,6 +113,15 @@ int main(int argc, char **argv) {
                         int hfd = (int)sh->param[2];
                         if (dhf_host_close(hfd) != 0) sh->result_code = (uint32_t)errno; else sh->result_code = 0;
                     }
+                    // Also support closing dir handles via param[2] if param[4]==1
+                    if (sh->param[4] == 1) {
+                        int dir_handle = (int)sh->param[2];
+                        if (dir_handle > 0 && dir_handle <= 16 && dir_table[dir_handle-1].used) {
+                            closedir(dir_table[dir_handle-1].dptr);
+                            dir_table[dir_handle-1].used = 0;
+                            dir_table[dir_handle-1].dptr = NULL;
+                        }
+                    }
                 } else if (cmd == 0x0007) { // GetStat
                     // param[0]=path offset; result_len returns size of struct stat filled into emulator memory at param[1]
                     uint32_t p0 = sh->param[0];
