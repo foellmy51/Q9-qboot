@@ -107,6 +107,45 @@ int main(int argc, char **argv) {
                         int hfd = (int)sh->param[2];
                         if (dhf_host_close(hfd) != 0) sh->result_code = (uint32_t)errno; else sh->result_code = 0;
                     }
+                } else if (cmd == 0x0007) { // GetStat
+                    // param[0]=path offset; result_len returns size of struct stat filled into emulator memory at param[1]
+                    uint32_t p0 = sh->param[0];
+                    uint32_t out_off = sh->param[1];
+                    char *path = (char *)((uint8_t*)mem + p0);
+                    char real[PATH_MAX];
+                    if (confined_path(dhf_descriptor_get_basepath(), path, real, sizeof(real)) != 0) {
+                        sh->result_code = (uint32_t)EACCES;
+                    } else {
+                        struct stat stbuf;
+                        if (stat(real, &stbuf) != 0) { sh->result_code = (uint32_t)errno; }
+                        else {
+                            // write stat struct into emulator memory at out_off if space
+                            if (out_off + sizeof(struct stat) > map_sz) { sh->result_code = (uint32_t)EFAULT; }
+                            else {
+                                memcpy((uint8_t*)mem + out_off, &stbuf, sizeof(struct stat));
+                                sh->result_code = 0;
+                                sh->result_len = sizeof(struct stat);
+                            }
+                        }
+                    }
+                } else if (cmd == 0x0008) { // SetStat
+                    // Not implemented fully: expect struct stat at param[1] offset
+                    sh->result_code = (uint32_t)ENOSYS;
+                } else if (cmd == 0x0009) { // Opendir
+                    // param[0]=path offset, result_len will return a fake dirfd (int)
+                    uint32_t p0 = sh->param[0];
+                    char *path = (char *)((uint8_t*)mem + p0);
+                    char real[PATH_MAX];
+                    if (confined_path(dhf_descriptor_get_basepath(), path, real, sizeof(real)) != 0) {
+                        sh->result_code = (uint32_t)EACCES;
+                    } else {
+                        // For simplicity return 1 as dir handle (TODO: implement DIR* tracking)
+                        sh->result_code = 0;
+                        sh->result_len = 1;
+                    }
+                } else if (cmd == 0x000A) { // Readdir
+                    // Not implemented: requires DIR tracking; return ENOSYS
+                    sh->result_code = (uint32_t)ENOSYS;
                 } else if (cmd == 0x000C) { // MkDir
                     char real[PATH_MAX];
                     if (confined_path(dhf_descriptor_get_basepath(), path, real, sizeof(real)) != 0) {
