@@ -20,6 +20,15 @@ int dhfdrv_readdir(int dirfd, void *entry);
 off_t dhfdrv_seek(int fd, off_t offset, int whence);
 int dhfdrv_truncate(const char *path, off_t length);
 
+/* PD-based variants: accept a 32-bit emulated pd pointer, resolve pd, and use
+ * the host_fd stored in the pd for operations. These are test-harness helpers
+ * allowing driver to operate based on manager-provided path descriptor pointers.
+ */
+int dhfdrv_close_pd(uint32_t emu_pd_addr);
+ssize_t dhfdrv_read_pd(uint32_t emu_pd_addr, void *buf, size_t count);
+ssize_t dhfdrv_write_pd(uint32_t emu_pd_addr, const void *buf, size_t count);
+off_t dhfdrv_seek_pd(uint32_t emu_pd_addr, off_t offset, int whence);
+
 /* Manager/Driver handoff helpers for emulated pd pointer (test harness)
  * The manager will allocate a per-path control block and place an emulator
  * address in the path descriptor; driver can resolve this emulated address

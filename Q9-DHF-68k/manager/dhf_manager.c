@@ -83,7 +83,9 @@ int dhf_manager_open(const char *path, int flags) {
 int dhf_manager_close(int fd) {
     dhf_path_desc_t *pd = lookup_pd(fd);
     if (!pd) return -1;
-    int res = dhfdrv_close(pd->host_fd);
+    /* Use PD-based driver close so driver resolves PD pointer itself */
+    uint32_t emu_addr = (uint32_t)(uintptr_t)pd->private;
+    int res = dhfdrv_close_pd(emu_addr);
     free_manager_fd(fd);
     return res;
 }
@@ -91,13 +93,15 @@ int dhf_manager_close(int fd) {
 ssize_t dhf_manager_read(int fd, void *buf, size_t count) {
     dhf_path_desc_t *pd = lookup_pd(fd);
     if (!pd) return -1;
-    return dhfdrv_read(pd->host_fd, buf, count);
+    uint32_t emu_addr = (uint32_t)(uintptr_t)pd->private;
+    return dhfdrv_read_pd(emu_addr, buf, count);
 }
 
 ssize_t dhf_manager_write(int fd, const void *buf, size_t count) {
     dhf_path_desc_t *pd = lookup_pd(fd);
     if (!pd) return -1;
-    return dhfdrv_write(pd->host_fd, buf, count);
+    uint32_t emu_addr = (uint32_t)(uintptr_t)pd->private;
+    return dhfdrv_write_pd(emu_addr, buf, count);
 }
 
 int dhf_manager_getstat(const char *path, void *statbuf) { return dhfdrv_getstat(path, statbuf); }

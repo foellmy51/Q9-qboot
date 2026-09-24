@@ -48,6 +48,35 @@ ssize_t dhfdrv_read(int fd, void *buf, size_t count) {
 ssize_t dhfdrv_write(int fd, const void *buf, size_t count) {
     return dhf_host_write(fd, buf, count);
 }
+
+/* PD-based helpers */
+int dhfdrv_close_pd(uint32_t emu_pd_addr) {
+    void *p = dhfdrv_resolve_pd_from_emulated_addr(emu_pd_addr);
+    if (!p) return -1;
+    dhf_path_desc_t *pd = (dhf_path_desc_t*)p;
+    return dhfdrv_close(pd->host_fd);
+}
+
+ssize_t dhfdrv_read_pd(uint32_t emu_pd_addr, void *buf, size_t count) {
+    void *p = dhfdrv_resolve_pd_from_emulated_addr(emu_pd_addr);
+    if (!p) return -1;
+    dhf_path_desc_t *pd = (dhf_path_desc_t*)p;
+    return dhfdrv_read(pd->host_fd, buf, count);
+}
+
+ssize_t dhfdrv_write_pd(uint32_t emu_pd_addr, const void *buf, size_t count) {
+    void *p = dhfdrv_resolve_pd_from_emulated_addr(emu_pd_addr);
+    if (!p) return -1;
+    dhf_path_desc_t *pd = (dhf_path_desc_t*)p;
+    return dhfdrv_write(pd->host_fd, buf, count);
+}
+
+off_t dhfdrv_seek_pd(uint32_t emu_pd_addr, off_t offset, int whence) {
+    void *p = dhfdrv_resolve_pd_from_emulated_addr(emu_pd_addr);
+    if (!p) return -1;
+    dhf_path_desc_t *pd = (dhf_path_desc_t*)p;
+    return dhfdrv_seek(pd->host_fd, offset, whence);
+}
 int dhfdrv_getstat(const char *path, void *statbuf) { (void)path; (void)statbuf; return -1; }
 int dhfdrv_setstat(const char *path, void *statbuf) { (void)path; (void)statbuf; return -1; }
 #include <limits.h>
