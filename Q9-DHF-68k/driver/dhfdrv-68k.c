@@ -13,7 +13,41 @@ ssize_t dhfdrv_read(int fd, void *buf, size_t count) { (void)fd; (void)buf; (voi
 ssize_t dhfdrv_write(int fd, const void *buf, size_t count) { (void)fd; (void)buf; (void)count; return -1; }
 int dhfdrv_getstat(const char *path, void *statbuf) { (void)path; (void)statbuf; return -1; }
 int dhfdrv_setstat(const char *path, void *statbuf) { (void)path; (void)statbuf; return -1; }
-int dhfdrv_chdir(const char *path) { (void)path; return -1; }
+#include <limits.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+
+int dhfdrv_chdir(const char *path) {
+    char base[PATH_MAX];
+    const char *bp = dhf_descriptor_get_basepath();
+    if (!bp) return -1;
+    strncpy(base, bp, sizeof(base)-1);
+    base[sizeof(base)-1] = '\0';
+
+    // Build candidate path under base
+    char candidate[PATH_MAX];
+    if (path[0] == '/')
+        snprintf(candidate, sizeof(candidate), "%s%s", base, path);
+    else
+        snprintf(candidate, sizeof(candidate), "%s/%s", base, path);
+
+    // Resolve realpaths and ensure confinement
+    char real_base[PATH_MAX];
+    char real_cand[PATH_MAX];
+    if (!realpath(base, real_base)) return -1;
+    if (!realpath(candidate, real_cand)) return -1;
+    size_t lb = strlen(real_base);
+    if (strncmp(real_base, real_cand, lb) != 0) {
+        errno = EACCES;
+        return -1;
+    }
+
+    // perform chdir to the real candidate
+    if (chdir(real_cand) != 0) return -1;
+    return 0;
+}
 int dhfdrv_mkdir(const char *path, int mode) { (void)path; (void)mode; return -1; }
 int dhfdrv_rmdir(const char *path) { (void)path; return -1; }
 int dhfdrv_unlink(const char *path) { (void)path; return -1; }
