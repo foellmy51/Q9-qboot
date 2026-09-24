@@ -8,7 +8,7 @@
 | Manager | chdir/cd | ❌ Not started | Must enforce basepath confinement; host-sim will handle but manager changes must be validated |
 | Manager | mkdir/rmdir/unlink | ❌ Not started | |
 | Manager | rename | ❌ Not started | |
-| Manager | opendir/readdir | 🟡 Partially | Opendir returns a stub handle; Readdir implemented for single-read demo; full DIR* tracking planned |
+| Manager | opendir/readdir | ✅ Done (basic) | Opendir, Readdir and handle tracking implemented for up to 16 DIR handles; supports single-entry reads per call |
 | Driver (dhfdrv-68k) | init | 🟡 Partially | Driver stub exists; host-sim provides host FS mounting and confinement helpers |
 | Driver (dhfdrv-68k) | open/read/write/close | 🟡 Partially | Host-simulator implements host-side FS operations; driver skeleton present but integration with emulator manager still needed |
 | Descriptor | basepath getter/setter | ✅ Done | Getter/setter implemented in descriptor/dhf_descriptor.c; host simulator uses basepath for confinement |
