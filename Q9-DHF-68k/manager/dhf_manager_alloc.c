@@ -11,15 +11,24 @@
  */
 
 #include <stdint.h>
+#include "os9_sysalloc.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 void *dhf_manager_alloc(size_t size) {
-    void *p = malloc(size);
-    if (!p) fprintf(stderr, "dhf_manager_alloc: allocation failed (%zu)\n", size);
+    void *p = NULL;
+    size_t s = size;
+    if (os9_srqmem(&s, &p) != 0) {
+        fprintf(stderr, "dhf_manager_alloc: os9_srqmem failed (%zu)\n", size);
+        return NULL;
+    }
     return p;
 }
 
 void dhf_manager_free(void *p) {
-    free(p);
+    if (!p) return;
+    /* os9_srtmem expects size to track internal accounting; we don't track it here, pass 0 */
+    os9_srtmem(0, p);
 }
 
 /* For host tests, return the pointer value as a 32-bit "emulator address" which
@@ -27,10 +36,7 @@ void dhf_manager_free(void *p) {
  * the driver-manager pointer handoff in tests.
  */
 uint32_t dhf_manager_alloc_emulated_addr(size_t size) {
-    void *p = dhf_manager_alloc(size);
-    if (!p) return 0;
-    uintptr_t v = (uintptr_t)p;
-    return (uint32_t)(v & 0xffffffff);
+    return os9_srqmem_emulated_addr(size);
 }
 
 void *dhf_manager_resolve_emulated_addr(uint32_t addr) {
