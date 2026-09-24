@@ -17,6 +17,9 @@ int dhfdrv_rename(const char *oldp, const char *newp);
 int dhfdrv_opendir(const char *path);
 int dhfdrv_readdir(int dirfd, void *entry);
 
+off_t dhfdrv_seek(int fd, off_t offset, int whence);
+int dhfdrv_truncate(const char *path, off_t length);
+
 /* Manager/Driver handoff helpers for emulated pd pointer (test harness)
  * The manager will allocate a per-path control block and place an emulator
  * address in the path descriptor; driver can resolve this emulated address
