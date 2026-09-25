@@ -103,7 +103,7 @@ Prüft auf Kurzschlüsse zwischen den Adressleitungen (Überlappung).
 
 ---
 
-## 4. Einbindung in den modularen Q-Boot Boot-Ablauf
+## 4. Einbindung in den modularen Q9-Boot Boot-Ablauf
 
 Das cb030-BIOS führt die Module in einer präzisen, optimierten Reihenfolge aus, damit der Entwickler maximal früh Feedback über die Konsole erhält:
 

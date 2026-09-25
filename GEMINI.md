@@ -1,6 +1,6 @@
-# Q-Boot Development Mandates
+# Q9-Boot Development Mandates
 
-This document outlines the architecture, style guide, and developer workflows for the **Q-Boot** bootloader and BIOS.
+This document outlines the architecture, style guide, and developer workflows for the **Q9-Boot** bootloader and BIOS.
 
 ---
 

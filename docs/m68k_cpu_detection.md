@@ -120,11 +120,11 @@ Analog zum 68040:
 
 ## 3. Zusammenfassung des Probe-Ablaufs im BIOS
 
-Mit dieser kaskadierenden Logik kann das `Q-Boot` BIOS beim Start ein extrem präzises Profil der CPU und des Boards erstellen. Die Ergebnisse können im System-Log ausgegeben werden:
+Mit dieser kaskadierenden Logik kann das `Q9-Boot` BIOS beim Start ein extrem präzises Profil der CPU und des Boards erstellen. Die Ergebnisse können im System-Log ausgegeben werden:
 
 ```text
 ==================================================
-         Q-Boot Bootloader & BIOS v1.0.0
+         Q9-Boot Bootloader & BIOS v1.0.0
 ==================================================
 POST: Pruefe CPU Register... OK
 POST: Pruefe RAM-Segmente... OK

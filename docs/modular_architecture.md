@@ -1,6 +1,6 @@
 # Modularität & Baukastensystem (HAL)
 
-Q-Boot ist als modularer Hardware-Baukasten (Hardware Abstraction Layer - HAL) konzipiert. Jedes Hardware-Subsystem wird über eine standardisierte C-Schnittstelle (Struktur mit Funktionszeigern) abstrahiert. Dadurch lässt sich die Ziel-Konfiguration ohne Änderungen am Kern-Bootloader austauschen.
+Q9-Boot ist als modularer Hardware-Baukasten (Hardware Abstraction Layer - HAL) konzipiert. Jedes Hardware-Subsystem wird über eine standardisierte C-Schnittstelle (Struktur mit Funktionszeigern) abstrahiert. Dadurch lässt sich die Ziel-Konfiguration ohne Änderungen am Kern-Bootloader austauschen.
 
 ---
 

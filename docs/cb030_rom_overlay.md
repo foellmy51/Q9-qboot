@@ -1,6 +1,6 @@
 # ROM-Overlay und Speicher-Remapping (cb030 Spezialfall)
 
-Dieses Dokument beschreibt das hardwarenahe Verfahren des **ROM-Overlays (Memory Remapping)** auf dem **cb030-Board** und wie Q-Boot Stage 1 dieses sicher und ohne Systemabsturz während des Bootvorgangs deaktiviert.
+Dieses Dokument beschreibt das hardwarenahe Verfahren des **ROM-Overlays (Memory Remapping)** auf dem **cb030-Board** und wie Q9-Boot Stage 1 dieses sicher und ohne Systemabsturz während des Bootvorgangs deaktiviert.
 
 ---
 

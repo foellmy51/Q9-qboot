@@ -1,6 +1,6 @@
 # Hardware-Integration: cb030 (MC68030 Board)
 
-Dieses Dokument beschreibt die Hardware-Belegung und die Low-Level-Integration von **Q-Boot** auf dem **cb030-System** (Motorola 68030 Computer-Board), welches im Emulator nachgebildet ist.
+Dieses Dokument beschreibt die Hardware-Belegung und die Low-Level-Integration von **Q9-Boot** auf dem **cb030-System** (Motorola 68030 Computer-Board), welches im Emulator nachgebildet ist.
 
 ---
 
@@ -10,7 +10,7 @@ Der MC68030 verfügt über einen 32-Bit Adressraum (4 GB). Für das cb030-System
 
 | Adressbereich | Größe | Typ | Beschreibung / Belegung |
 | :--- | :--- | :--- | :--- |
-| `0x00000000 - 0x0007FFFF` | 512 KB | **ROM / Flash** | Enthält Q-Boot Stage 1 (Reset-Vektoren) und Stage 2 (BIOS/Shell) |
+| `0x00000000 - 0x0007FFFF` | 512 KB | **ROM / Flash** | Enthält Q9-Boot Stage 1 (Reset-Vektoren) und Stage 2 (BIOS/Shell) |
 | `0x00800000 - 0x00FFFFFF` | 8 MB | **SRAM / DRAM** | Hauptspeicher (System-RAM) |
 | `0x00F00000 - 0x00F0000F` | 16 Bytes | **I/O (UART)** | Register des seriellen Bausteins (z.B. MC68681 DUART oder 16550) |
 | `0x00F10000 - 0x00F100FF` | 256 Bytes | **I/O (Storage)** | IDE-Controller oder SD-Karten-Interface (Block Storage) |
@@ -24,7 +24,7 @@ Nach dem Einschalten (Power-On) oder Reset führt die MC68030-CPU folgende Schri
 
 1.  **Vektoren laden:** Die CPU liest automatisch die ersten beiden 32-Bit-Werte aus dem ROM (Adresse `0x00000000`):
     *   `0x00000000`: Initialer **Stack Pointer (ISP)** -> Zeigt auf das Ende des RAMs (z.B. `0x01000000`).
-    *   `0x00000004`: Initialer **Program Counter (PC)** -> Einstiegspunkt von Q-Boot Stage 1 (z.B. `0x00000400`).
+    *   `0x00000004`: Initialer **Program Counter (PC)** -> Einstiegspunkt von Q9-Boot Stage 1 (z.B. `0x00000400`).
 2.  **CPU-Initialisierung (Assembly):**
     *   Deaktivieren der Caches (Instruction und Data Cache über das **CACR** - Cache Control Register).
     *   Vektor-Basis-Register (**VBR**) initialisieren. Beim 68030 zeigt das VBR standardmäßig auf `0x00000000` (ROM). Um Interrupt-Vektoren im RAM dynamisch verändern zu können, kopiert Stage 1 die Vektortabelle in das RAM (z.B. ab `0x00800000`) und biegt das VBR dorthin um.
@@ -61,4 +61,4 @@ void write_to_terminal(const char *str) {
 
 Der cb030 verfügt über ein kleines I2C-EEPROM (z.B. 24C16) an Adresse `0x00F20000`. 
 *   **Zweck:** Permanenter Speicher für die Setup-Variablen (`bootdelay`, `bootorder`, `baudrate`).
-*   **Schutz:** Die Variablen werden mit einer einfachen CRC16-Prüfsumme versehen. Schlägt die Prüfung beim Einschalten fehl, verwendet Q-Boot die Standardwerte im Flash-ROM und warnt den Benutzer in der Shell.
+*   **Schutz:** Die Variablen werden mit einer einfachen CRC16-Prüfsumme versehen. Schlägt die Prüfung beim Einschalten fehl, verwendet Q9-Boot die Standardwerte im Flash-ROM und warnt den Benutzer in der Shell.

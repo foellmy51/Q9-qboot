@@ -1,6 +1,6 @@
-# Q-Boot
+# Q9-Boot
 
-**Q-Boot** ist das dedizierte Bootloader-, BIOS- und Startsystem für die **Q9-Architektur**. Es stellt die Brücke zwischen der nackten Hardware nach dem Einschalten (Power-On) und dem Laden des vollständigen Betriebssystems dar.
+**Q9-Boot** ist das dedizierte Bootloader-, BIOS- und Startsystem für die **Q9-Architektur**. Es stellt die Brücke zwischen der nackten Hardware nach dem Einschalten (Power-On) und dem Laden des vollständigen Betriebssystems dar.
 
 ---
 
@@ -55,7 +55,7 @@
 ## Projektstruktur
 
 ```text
-Q-Boot/
+Q9-Boot/
 ├── docs/                 # Spezifikationen, Registerbelegungen, I2C-Memory Maps
 ├── src/
 │   ├── boot/             # Stage 1 Bootstrap (Assembly & Low-Level Initialisierung)
