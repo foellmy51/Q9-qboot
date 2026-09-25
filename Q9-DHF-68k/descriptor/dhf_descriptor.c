@@ -5,7 +5,7 @@
 #include "dhf_descriptor.h"
 #include <string.h>
 
-static char basepath[1024] = "/";
+static char basepath[1024] = "/tmp";
 
 const char* dhf_descriptor_get_basepath(void) { return basepath; }
 int dhf_descriptor_set_basepath(const char *p) {
