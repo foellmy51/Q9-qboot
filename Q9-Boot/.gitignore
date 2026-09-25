@@ -1,0 +1,14 @@
+# Built files
+*.o
+*.elf
+*.bin
+*.hex
+*.map
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Build directories (optional but useful if building in build/)
+build/
+dist/
